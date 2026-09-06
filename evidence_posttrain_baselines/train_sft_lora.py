@@ -41,12 +41,15 @@ def main() -> None:
         target_modules=lora["target_modules"], task_type="CAUSAL_LM", bias="none",
     )
     output = resolve_root_path(experiment["paths"]["output_dir"]) / model_config["name"] / f"{training['output_subdir']}_{variant}"
+    # TRL 1.12的SFTConfig只接受warmup_steps，按总步数把比例换算回去
+    steps_per_epoch = -(-len(dataset["train"]) // (training["per_device_train_batch_size"] * training["gradient_accumulation_steps"]))
+    warmup_steps = max(1, round(float(training["warmup_ratio"]) * steps_per_epoch * int(training["num_train_epochs"])))
     train_args = SFTConfig(
         output_dir=str(output), num_train_epochs=training["num_train_epochs"], learning_rate=training["learning_rate"],
         per_device_train_batch_size=training["per_device_train_batch_size"], per_device_eval_batch_size=training["per_device_eval_batch_size"],
         gradient_accumulation_steps=training["gradient_accumulation_steps"], max_length=training["max_length"],
         logging_steps=training["logging_steps"], eval_strategy="steps", eval_steps=training["eval_steps"],
-        save_steps=training["save_steps"], warmup_ratio=training["warmup_ratio"], lr_scheduler_type=training["lr_scheduler_type"],
+        save_steps=training["save_steps"], warmup_steps=warmup_steps, lr_scheduler_type=training["lr_scheduler_type"],
         bf16=training["bf16"], tf32=training["tf32"], gradient_checkpointing=training["gradient_checkpointing"],
         gradient_checkpointing_kwargs={"use_reentrant": False}, assistant_only_loss=training["assistant_only_loss"],
         packing=training["packing"], report_to=["tensorboard"], seed=training["seed"], save_total_limit=2,

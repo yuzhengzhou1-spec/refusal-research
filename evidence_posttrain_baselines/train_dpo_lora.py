@@ -29,12 +29,15 @@ def main() -> None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"
     output = resolve_root_path(experiment["paths"]["output_dir"]) / model_config["name"] / training["output_subdir"]
+    # TRL 1.12的DPOConfig只接受warmup_steps，按总步数把比例换算回去
+    steps_per_epoch = -(-len(dataset) // (training["per_device_train_batch_size"] * training["gradient_accumulation_steps"]))
+    warmup_steps = max(1, round(float(training["warmup_ratio"]) * steps_per_epoch * int(training["num_train_epochs"])))
     train_args = DPOConfig(
         output_dir=str(output), num_train_epochs=training["num_train_epochs"], learning_rate=training["learning_rate"],
         per_device_train_batch_size=training["per_device_train_batch_size"], per_device_eval_batch_size=training["per_device_eval_batch_size"],
         gradient_accumulation_steps=training["gradient_accumulation_steps"], max_length=training["max_length"],
         beta=training["beta"], loss_type=[training["loss_type"]],
-        logging_steps=training["logging_steps"], save_steps=training["save_steps"], warmup_ratio=training["warmup_ratio"],
+        logging_steps=training["logging_steps"], save_steps=training["save_steps"], warmup_steps=warmup_steps,
         bf16=training["bf16"], tf32=training["tf32"], gradient_checkpointing=training["gradient_checkpointing"],
         gradient_checkpointing_kwargs={"use_reentrant": False}, report_to=["tensorboard"], seed=training["seed"], save_total_limit=2,
     )
