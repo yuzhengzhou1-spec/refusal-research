@@ -1,0 +1,63 @@
+# 密钥与本机覆盖配置
+.env
+.env.*
+!.env.example
+**/secrets/*
+!**/secrets/.env.local.example
+ops/server.local.env
+evidence_posttrain_baselines/configs/experiment.server.yaml
+
+# Python与编辑器临时文件
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv*/
+venv/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 模型、适配器和实验输出
+model_weights/*
+!model_weights/.gitignore
+!model_weights/README.md
+!model_weights/manifest.example.yaml
+!model_weights/*/
+!model_weights/*/.gitkeep
+evidence_posttrain_baselines/outputs/*
+!evidence_posttrain_baselines/outputs/.gitkeep
+evidence_posttrain_baselines/data/processed/*
+!evidence_posttrain_baselines/data/processed/.gitkeep
+
+# 数据生产阶段的大型或可重建产物
+parent_pool_project/*_output/
+parent_pool_project/core_gold_qwen_v4_output/
+parent_pool_project/family_freeze_blind_v1/
+parent_pool_project/source_to_family_smoke_v1/
+parent_pool_project/family_100_v1/**
+
+# 只保留论文当前使用的200条冻结输入和状态说明
+!parent_pool_project/family_100_v1/status.json
+!parent_pool_project/family_100_v1/missing/
+parent_pool_project/family_100_v1/missing/*
+!parent_pool_project/family_100_v1/missing/missing_100_high_quality.jsonl
+!parent_pool_project/family_100_v1/conflict/
+parent_pool_project/family_100_v1/conflict/*
+!parent_pool_project/family_100_v1/conflict/conflict_100_high_quality.jsonl
+
+# 训练日志和常见大文件
+wandb/
+runs/
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.gguf
+*.onnx
+*.log
+

@@ -1,0 +1,55 @@
+{
+  "protocol_version": "evidence_family_freeze.v1.0.1",
+  "frozen_at": "2026-08-27",
+  "constructor_model": "deepseek_v4_pro",
+  "baseline_model": "qwen3_8b",
+  "decoding": {"temperature": 0, "top_p": 1, "thinking_disabled": true},
+  "blind_selection": {
+    "seed": 20260827,
+    "per_dataset": 25,
+    "datasets": ["hotpotqa", "musique"],
+    "use_overflow": false,
+    "exclude_development_files": [
+      "missing_family_split_v2_5_2_grounded_same50_output/missing_edit_calls.jsonl",
+      "conflict_family_v1_2_smoke50_output/conflict_edit_calls.jsonl"
+    ]
+  },
+  "missing": {
+    "builder": "missing_family.split_responsibility.v2_5_2",
+    "editor_prompt": "missing_family.editor.answer_free_gap.v2_2",
+    "clarification_prompt": "missing_family.clarification.grounded_gap.v3_3_2",
+    "forward_gate": "missing_semantic_gate.v1_2",
+    "reverse_gate": "missing_reverse_semantic_gate.v1_1_frozen",
+    "selector": "missing_high_quality_selector.v1_frozen",
+    "blind_acceptance": {"minimum_total": 25, "minimum_per_dataset": 10}
+  },
+  "conflict": {
+    "builder": "conflict_family.append_assertion.v1_2",
+    "editor_prompt": "conflict_family.editor.append_atomic_conflict.v1_2",
+    "clarification_prompt": "conflict_family.clarifier.present_two_values.v1",
+    "semantic_gate_a": "conflict_semantic_gate.v1_5_frozen",
+    "semantic_gate_b": "conflict_semantic_gate.v1_3_frozen",
+    "selector": "conflict_high_quality_selector.v1_2",
+    "blind_acceptance": {"minimum_total": 15, "minimum_per_dataset": 5}
+  },
+  "global_acceptance": {
+    "development_overlap_must_be_zero": true,
+    "api_parse_worker_errors_must_be_zero": true,
+    "qwen_behavior_must_not_filter_samples": true,
+    "prompt_changes_after_blind_start_forbidden": true
+  },
+  "amendments": [
+    {
+      "id": "A1",
+      "scope": "missing_reverse_gate_only",
+      "reason": "v1 used double-negative no_* fields that produced verdicts contradicting model reasons; v1.1 uses direct defect booleans",
+      "amendment_class": "evaluator_label_polarity_bug",
+      "content_policy_changed": false,
+      "blind_ids_changed": false,
+      "construction_outputs_changed": false,
+      "forward_gate_changed": false,
+      "thresholds_changed": false,
+      "old_raw_outputs_retained": true
+    }
+  ]
+}

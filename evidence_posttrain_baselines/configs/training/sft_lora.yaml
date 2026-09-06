@@ -1,0 +1,24 @@
+seed: 20260901
+dataset_variant: full_trajectory
+output_subdir: sft_lora
+num_train_epochs: 3
+learning_rate: 0.0002
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+gradient_accumulation_steps: 16
+max_length: 4096
+logging_steps: 5
+eval_steps: 25
+save_steps: 25
+warmup_ratio: 0.05
+lr_scheduler_type: cosine
+bf16: true
+tf32: true
+gradient_checkpointing: true
+assistant_only_loss: true
+packing: false
+lora:
+  r: 32
+  alpha: 64
+  dropout: 0.05
+  target_modules: all-linear

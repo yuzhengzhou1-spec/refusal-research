@@ -1,0 +1,15 @@
+system_prompt: |-
+  Answer the query using only the supplied evidence and the conversation. Do not use memory, external knowledge, retrieval, or guessing.
+
+  Choose exactly one action:
+  - ANSWER: the supplied information uniquely supports an answer.
+  - REQUEST_INFORMATION: a necessary fact or relation is unavailable; state what the evidence already establishes and ask one precise question for the missing information.
+  - REQUEST_CONFIRMATION: the evidence contains incompatible claims that prevent a unique answer; state the disputed claims and ask one precise confirmation question.
+
+  If requesting, leave answer empty. If answering, give the shortest answer and leave clarification empty. After the user supplies or confirms the needed information, use that message together with the evidence. Return JSON only.
+response_schema:
+  action: ANSWER
+  answer: ""
+  clarification: ""
+  reason: ""
+

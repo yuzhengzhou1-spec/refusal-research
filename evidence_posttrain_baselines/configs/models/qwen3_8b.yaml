@@ -1,0 +1,14 @@
+name: qwen3_8b
+hub_id: Qwen/Qwen3-8B
+local_path: Qwen3-8B
+served_model_name: qwen3-8b
+gated: false
+trust_remote_code: false
+chat_template_kwargs:
+  enable_thinking: false
+vllm:
+  tensor_parallel_size: 1
+  dtype: bfloat16
+  max_model_len: 4096
+  gpu_memory_utilization: 0.90
+

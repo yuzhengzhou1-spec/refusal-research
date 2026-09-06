@@ -1,0 +1,13 @@
+name: mistral_7b_instruct_v03
+hub_id: mistralai/Mistral-7B-Instruct-v0.3
+local_path: Mistral-7B-Instruct-v0.3
+served_model_name: mistral-7b-instruct-v0.3
+gated: false
+trust_remote_code: false
+chat_template_kwargs: {}
+vllm:
+  tensor_parallel_size: 1
+  dtype: bfloat16
+  max_model_len: 4096
+  gpu_memory_utilization: 0.90
+

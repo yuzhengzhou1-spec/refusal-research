@@ -1,0 +1,13 @@
+name: qwen2_5_7b_instruct
+hub_id: Qwen/Qwen2.5-7B-Instruct
+local_path: Qwen2.5-7B-Instruct
+served_model_name: qwen2.5-7b-instruct
+gated: false
+trust_remote_code: false
+chat_template_kwargs: {}
+vllm:
+  tensor_parallel_size: 1
+  dtype: bfloat16
+  max_model_len: 4096
+  gpu_memory_utilization: 0.90
+

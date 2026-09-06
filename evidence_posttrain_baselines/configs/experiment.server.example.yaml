@@ -1,0 +1,33 @@
+version: 1
+active_model: qwen2_5_7b_instruct
+
+paths:
+  missing_source: ../parent_pool_project/family_100_v1/missing/missing_100_high_quality.jsonl
+  conflict_source: ../parent_pool_project/family_100_v1/conflict/conflict_100_high_quality.jsonl
+  processed_dir: data/processed/family_100_v1
+  output_dir: /home/zyz/experiments/baselines
+  model_root: /home/zyz/models
+
+split:
+  seed: 20260901
+  train_ratio: 0.8
+  dev_ratio: 0.1
+  test_ratio: 0.1
+  search_trials: 5000
+
+task:
+  prompt_file: configs/task_prompt.yaml
+  parse_retry: 1
+
+inference:
+  base_url: http://127.0.0.1:8000/v1
+  api_key: EMPTY
+  temperature: 0.0
+  top_p: 1.0
+  max_tokens: 256
+  concurrency: 16
+  timeout_seconds: 120
+  seed: 20260901
+  served_model_name_override: null
+  adapter_path: null
+  adapter_name: null

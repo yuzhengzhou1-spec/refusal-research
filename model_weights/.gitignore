@@ -1,0 +1,7 @@
+*
+!.gitignore
+!README.md
+!manifest.example.yaml
+!*/
+!*/.gitkeep
+

@@ -1,0 +1,13 @@
+name: llama3_1_8b_instruct
+hub_id: meta-llama/Llama-3.1-8B-Instruct
+local_path: Llama-3.1-8B-Instruct
+served_model_name: llama3.1-8b-instruct
+gated: true
+trust_remote_code: false
+chat_template_kwargs: {}
+vllm:
+  tensor_parallel_size: 1
+  dtype: bfloat16
+  max_model_len: 4096
+  gpu_memory_utilization: 0.90
+

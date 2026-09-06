@@ -1,0 +1,4 @@
+secrets/.env.local
+results/
+__pycache__/
+tests/__pycache__/

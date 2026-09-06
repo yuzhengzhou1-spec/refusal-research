@@ -1,0 +1,57 @@
+{
+  "配置版本": "eplus_eval.v1",
+  "提示版本": "closed_context_answer_only.v1",
+  "默认参数": {
+    "temperature": 0,
+    "top_p": 1,
+    "max_tokens": 96,
+    "timeout_seconds": 180,
+    "max_retries": 5
+  },
+  "服务商": {
+    "deepseek_api": {
+      "协议": "openai_chat_completions",
+      "base_url": "https://api.deepseek.com/v1",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "api_key_optional": false
+    },
+    "dashscope_api": {
+      "协议": "openai_chat_completions",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "api_key_env": "DASHSCOPE_API_KEY",
+      "api_key_optional": false
+    },
+    "vllm_local": {
+      "协议": "openai_chat_completions",
+      "base_url": "http://127.0.0.1:8000/v1",
+      "api_key_env": "VLLM_API_KEY",
+      "api_key_optional": true
+    }
+  },
+  "模型": {
+    "deepseek_v4_flash": {
+      "服务商": "deepseek_api",
+      "model_id": "deepseek-v4-flash",
+      "workers": 8,
+      "extra_body": {"thinking": {"type": "disabled"}}
+    },
+    "deepseek_v4_pro": {
+      "服务商": "deepseek_api",
+      "model_id": "deepseek-v4-pro",
+      "workers": 4,
+      "extra_body": {"thinking": {"type": "disabled"}}
+    },
+    "qwen3_8b": {
+      "服务商": "dashscope_api",
+      "model_id": "qwen3-8b",
+      "workers": 4,
+      "extra_body": {"enable_thinking": false}
+    },
+    "qwen2_5_7b_instruct": {
+      "服务商": "dashscope_api",
+      "model_id": "qwen2.5-7b-instruct",
+      "workers": 4,
+      "extra_body": {}
+    }
+  }
+}
