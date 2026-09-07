@@ -11,3 +11,5 @@ vllm:
   max_model_len: 4096
   gpu_memory_utilization: 0.90
 
+# assistant_only_loss所需的{% generation %}标记版模板, 渲染输出与原生模板逐字符一致
+train_chat_template: configs/chat_templates/llama3_1_8b_instruct.jinja

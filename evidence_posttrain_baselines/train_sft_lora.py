@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 from common import load_experiment, load_yaml, model_path, resolve_root_path
 
@@ -31,6 +32,18 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(base_path, trust_remote_code=model_config["trust_remote_code"])
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
+    # assistant_only_loss需要带{% generation %}标记的训练模板; 个别模型(如Llama-3.1)原生模板
+    # 不含标记且TRL无法自动补丁。从模型配置注入标记版模板, 并断言渲染输出与原模板逐字符一致。
+    if model_config.get("train_chat_template"):
+        template_path = (Path(__file__).parent / model_config["train_chat_template"]).resolve()
+        marked = template_path.read_text(encoding="utf-8")
+        original_template = tokenizer.chat_template
+        sample = [{"role": "user", "content": "hi"}, {"role": "assistant", "content": "hello"}]
+        tokenizer.chat_template = marked
+        assert tokenizer.apply_chat_template(sample, tokenize=False) == tokenizer.apply_chat_template(
+            sample, tokenize=False, chat_template=original_template
+        ), "标记版训练模板渲染结果与原模板不一致"
+        print(f"已注入训练模板: {template_path}")
     base_model = AutoModelForCausalLM.from_pretrained(
         base_path, dtype=torch.bfloat16,
         trust_remote_code=model_config["trust_remote_code"], attn_implementation="sdpa",
