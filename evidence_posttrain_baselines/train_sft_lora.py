@@ -10,7 +10,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="使用TRL和PEFT执行SFT-LoRA")
     parser.add_argument("--config", default="configs/experiment.yaml")
     parser.add_argument("--train-config", default="configs/training/sft_lora.yaml")
-    parser.add_argument("--variant", choices=["full_trajectory", "initial_only", "full_only"], help="覆盖训练配置中的dataset_variant")
+    parser.add_argument("--variant", choices=["full_trajectory", "initial_only", "first_turn_only", "full_only"], help="覆盖训练配置中的dataset_variant")
     parser.add_argument("--seed", type=int, help="覆盖训练配置中的seed(多种子复验)")
     parser.add_argument("--output-suffix", help="输出目录后缀(多种子复验时区分, 如 _seed20260902)")
     args = parser.parse_args()
@@ -28,7 +28,11 @@ def main() -> None:
     variant = args.variant or training["dataset_variant"]
     base_path = model_path(experiment, model_config)
     processed = resolve_root_path(experiment["paths"]["processed_dir"])
-    prefix = {"full_trajectory": "sft", "initial_only": "sft_initial_only", "full_only": "sft_full_only"}[variant]
+    # first_turn_only是initial_only的准确名称: 279条=全部状态首步(119 ANSWER+160澄清), 仅缺恢复轮,
+    # 与full_trajectory构成"恢复轮监督"的精确消融; initial_only保留为兼容别名, 数据文件同名。
+    prefix = {"full_trajectory": "sft", "initial_only": "sft_initial_only", "first_turn_only": "sft_initial_only", "full_only": "sft_full_only"}[variant]
+    if variant == "first_turn_only":
+        variant = "initial_only"  # 产物目录沿用既有命名, 避免多种子运行目录分裂
     dataset = load_dataset("json", data_files={
         "train": str(processed / f"{prefix}_train.jsonl"),
         "validation": str(processed / f"{prefix}_dev.jsonl"),
