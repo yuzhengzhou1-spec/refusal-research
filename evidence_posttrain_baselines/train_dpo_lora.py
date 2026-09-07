@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from common import load_experiment, load_yaml, resolve_output_artifact
+from common import load_experiment, load_yaml, resolve_output_artifact, resolve_root_path
 
 
 def main() -> None:
