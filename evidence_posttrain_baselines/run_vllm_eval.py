@@ -3,9 +3,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from common import (
@@ -24,7 +23,22 @@ def expected_action(record: dict[str, Any]) -> str:
     return "REQUEST_INFORMATION" if record["experiment_state"] == "MISSING" else "REQUEST_CONFIRMATION"
 
 
-async def call_json(client: Any, semaphore: asyncio.Semaphore, messages: list[dict[str, str]], model: dict[str, Any], inference: dict[str, Any], retries: int) -> dict[str, Any]:
+# 冻结协议的正式JSON Schema, 与task_prompt.yaml的response_schema示例及parse_response约定一致;
+# --guided-json时经vLLM structured outputs(outlines/xgrammar)强制输出合法, 用于剥离协议学习成分
+GUIDED_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "action": {"type": "string", "enum": ["ANSWER", "REQUEST_INFORMATION", "REQUEST_CONFIRMATION"]},
+        "answer": {"type": "string"},
+        "clarification": {"type": "string"},
+        "reason": {"type": "string"},
+    },
+    "required": ["action", "answer", "clarification", "reason"],
+    "additionalProperties": False,
+}
+
+
+async def call_json(client: Any, semaphore: asyncio.Semaphore, messages: list[dict[str, str]], model: dict[str, Any], inference: dict[str, Any], retries: int, guided_json: bool = False) -> dict[str, Any]:
     attempts = []
     for _ in range(retries + 1):
         try:
@@ -33,8 +47,13 @@ async def call_json(client: Any, semaphore: asyncio.Semaphore, messages: list[di
                 "temperature": inference["temperature"], "top_p": inference["top_p"],
                 "max_tokens": inference["max_tokens"], "seed": inference["seed"],
             }
+            extra_body: dict[str, Any] = {}
             if model.get("chat_template_kwargs"):
-                kwargs["extra_body"] = {"chat_template_kwargs": model["chat_template_kwargs"]}
+                extra_body["chat_template_kwargs"] = model["chat_template_kwargs"]
+            if guided_json:
+                extra_body["guided_json"] = GUIDED_JSON_SCHEMA
+            if extra_body:
+                kwargs["extra_body"] = extra_body
             async with semaphore:
                 response = await client.chat.completions.create(**kwargs)
             raw = response.choices[0].message.content or ""
@@ -48,12 +67,12 @@ async def call_json(client: Any, semaphore: asyncio.Semaphore, messages: list[di
     return {"status": "PARSE_OR_API_ERROR", "raw_attempts": attempts, "parsed": None}
 
 
-async def evaluate_one(client: Any, semaphore: asyncio.Semaphore, record: dict[str, Any], model: dict[str, Any], task: dict[str, Any], inference: dict[str, Any], retries: int) -> dict[str, Any]:
+async def evaluate_one(client: Any, semaphore: asyncio.Semaphore, record: dict[str, Any], model: dict[str, Any], task: dict[str, Any], inference: dict[str, Any], retries: int, guided_json: bool = False) -> dict[str, Any]:
     full_messages = make_initial_messages(record, task, full=True)
     initial_messages = make_initial_messages(record, task, full=False)
     full_result, initial_result = await asyncio.gather(
-        call_json(client, semaphore, full_messages, model, inference, retries),
-        call_json(client, semaphore, initial_messages, model, inference, retries),
+        call_json(client, semaphore, full_messages, model, inference, retries, guided_json),
+        call_json(client, semaphore, initial_messages, model, inference, retries, guided_json),
     )
     turns = normalized_trajectory(record)
     user_reply = turns[1]["content"]
@@ -63,7 +82,7 @@ async def evaluate_one(client: Any, semaphore: asyncio.Semaphore, record: dict[s
             {"role": "assistant", "content": initial_result["raw_attempts"][-1]},
             {"role": "user", "content": user_reply},
         ]
-        continuation_result = await call_json(client, semaphore, continuation_messages, model, inference, retries)
+        continuation_result = await call_json(client, semaphore, continuation_messages, model, inference, retries, guided_json)
 
     full_parsed = full_result["parsed"] or {}
     initial_parsed = initial_result["parsed"] or {}
@@ -113,7 +132,7 @@ async def async_main(args: argparse.Namespace) -> None:
     inference = experiment["inference"]
     client = AsyncOpenAI(base_url=inference["base_url"], api_key=inference["api_key"], timeout=inference["timeout_seconds"])
     semaphore = asyncio.Semaphore(int(inference["concurrency"]))
-    jobs = [evaluate_one(client, semaphore, row, model, task, inference, int(experiment["task"]["parse_retry"])) for row in records]
+    jobs = [evaluate_one(client, semaphore, row, model, task, inference, int(experiment["task"]["parse_retry"]), args.guided_json) for row in records]
     results = await asyncio.gather(*jobs)
     run_name = args.run_name or f"{model['name']}_{args.split}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     output = resolve_root_path(experiment["paths"]["output_dir"]) / run_name
@@ -135,6 +154,7 @@ def main() -> None:
     parser.add_argument("--split", choices=["train", "dev", "test"], default="test")
     parser.add_argument("--run-name")
     parser.add_argument("--served-model-name", help="评测LoRA时覆盖vLLM中的模型别名")
+    parser.add_argument("--guided-json", action="store_true", help="vLLM结构化输出强制JSON协议(基线对照: 剥离格式学习成分)")
     asyncio.run(async_main(parser.parse_args()))
 
 

@@ -11,6 +11,8 @@ def main() -> None:
     parser.add_argument("--config", default="configs/experiment.yaml")
     parser.add_argument("--train-config", default="configs/training/sft_lora.yaml")
     parser.add_argument("--variant", choices=["full_trajectory", "initial_only", "full_only"], help="覆盖训练配置中的dataset_variant")
+    parser.add_argument("--seed", type=int, help="覆盖训练配置中的seed(多种子复验)")
+    parser.add_argument("--output-suffix", help="输出目录后缀(多种子复验时区分, 如 _seed20260902)")
     args = parser.parse_args()
 
     import torch
@@ -21,6 +23,8 @@ def main() -> None:
 
     experiment, model_config, _ = load_experiment(args.config)
     training = load_yaml(args.train_config)
+    if args.seed is not None:
+        training["seed"] = args.seed
     variant = args.variant or training["dataset_variant"]
     base_path = model_path(experiment, model_config)
     processed = resolve_root_path(experiment["paths"]["processed_dir"])
@@ -53,7 +57,7 @@ def main() -> None:
         r=lora["r"], lora_alpha=lora["alpha"], lora_dropout=lora["dropout"],
         target_modules=lora["target_modules"], task_type="CAUSAL_LM", bias="none",
     )
-    output = resolve_root_path(experiment["paths"]["output_dir"]) / model_config["name"] / f"{training['output_subdir']}_{variant}"
+    output = resolve_root_path(experiment["paths"]["output_dir"]) / model_config["name"] / f"{training['output_subdir']}_{variant}{args.output_suffix or ''}"
     # TRL 1.12的SFTConfig只接受warmup_steps，按总步数把比例换算回去
     steps_per_epoch = -(-len(dataset["train"]) // (training["per_device_train_batch_size"] * training["gradient_accumulation_steps"]))
     warmup_steps = max(1, round(float(training["warmup_ratio"]) * steps_per_epoch * int(training["num_train_epochs"])))

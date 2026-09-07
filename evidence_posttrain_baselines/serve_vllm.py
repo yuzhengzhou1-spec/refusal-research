@@ -21,7 +21,7 @@ def parse_adapters(entries: list[str] | None, served_model_name: str) -> list[tu
     return adapters
 
 
-def build_command(experiment, model, adapters: list[tuple[str, str]] | None = None, port: int = 8000, max_lora_rank: int | None = None) -> list[str]:
+def build_command(experiment, model, adapters: list[tuple[str, str]] | None = None, port: int = 8000, max_lora_rank: int | None = None, max_loras: int | None = None) -> list[str]:
     config = model["vllm"]
     command = [
         "vllm", "serve", str(model_path(experiment, model)),
@@ -38,6 +38,8 @@ def build_command(experiment, model, adapters: list[tuple[str, str]] | None = No
         command.extend(["--enable-lora", "--lora-modules", *[f"{alias}={path}" for alias, path in adapters]])
         if max_lora_rank:
             command.extend(["--max-lora-rank", str(max_lora_rank)])
+        if max_loras:
+            command.extend(["--max-loras", str(max_loras)])
     return command
 
 
@@ -60,6 +62,7 @@ def main() -> None:
     command = build_command(
         experiment, model, adapters,
         port=int(inference.get("port", 8000)), max_lora_rank=inference.get("max_lora_rank"),
+        max_loras=inference.get("max_loras"),
     )
     print(shlex.join(command))
     if args.run:
