@@ -51,7 +51,11 @@ async def call_json(client: Any, semaphore: asyncio.Semaphore, messages: list[di
             if model.get("chat_template_kwargs"):
                 extra_body["chat_template_kwargs"] = model["chat_template_kwargs"]
             if guided_json:
-                extra_body["guided_json"] = GUIDED_JSON_SCHEMA
+                # vLLM 0.19的guided_json已被静默忽略, 结构化输出走OpenAI风格response_format
+                kwargs["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {"name": "evidence_protocol", "strict": True, "schema": GUIDED_JSON_SCHEMA},
+                }
             if extra_body:
                 kwargs["extra_body"] = extra_body
             async with semaphore:
