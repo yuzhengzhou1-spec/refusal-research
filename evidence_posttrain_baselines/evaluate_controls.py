@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-from collections import defaultdict
 from typing import Any
 
 from common import answer_is_correct, load_experiment, make_user_content, read_jsonl, resolve_root_path, write_jsonl

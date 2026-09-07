@@ -10,6 +10,7 @@ def main() -> None:
     parser.add_argument("--config", default="configs/experiment.yaml")
     parser.add_argument("--train-config", default="configs/training/dpo_lora.yaml")
     parser.add_argument("--sft-adapter", help="覆盖训练配置中的sft_adapter")
+    parser.add_argument("--output-suffix", help="输出目录后缀(区分多版本偏好集, 如 _b5_bidirectional)")
     args = parser.parse_args()
 
     import torch
@@ -28,7 +29,7 @@ def main() -> None:
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"
-    output = resolve_root_path(experiment["paths"]["output_dir"]) / model_config["name"] / training["output_subdir"]
+    output = resolve_root_path(experiment["paths"]["output_dir"]) / model_config["name"] / f"{training['output_subdir']}{args.output_suffix or ''}"
     # TRL 1.12的DPOConfig只接受warmup_steps，按总步数把比例换算回去
     steps_per_epoch = -(-len(dataset) // (training["per_device_train_batch_size"] * training["gradient_accumulation_steps"]))
     warmup_steps = max(1, round(float(training["warmup_ratio"]) * steps_per_epoch * int(training["num_train_epochs"])))
