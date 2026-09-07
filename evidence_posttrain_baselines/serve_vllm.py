@@ -7,7 +7,7 @@ import subprocess
 from common import load_experiment, model_path
 
 
-def build_command(experiment, model, adapter: str | None, adapter_name: str | None) -> list[str]:
+def build_command(experiment, model, adapter: str | None, adapter_name: str | None, port: int = 8000, max_lora_rank: int | None = None) -> list[str]:
     config = model["vllm"]
     command = [
         "vllm", "serve", str(model_path(experiment, model)),
@@ -16,12 +16,15 @@ def build_command(experiment, model, adapter: str | None, adapter_name: str | No
         "--dtype", str(config["dtype"]),
         "--max-model-len", str(config["max_model_len"]),
         "--gpu-memory-utilization", str(config["gpu_memory_utilization"]),
+        "--port", str(port),
     ]
     if model.get("trust_remote_code"):
         command.append("--trust-remote-code")
     if adapter:
         alias = adapter_name or f"{model['served_model_name']}-lora"
         command.extend(["--enable-lora", "--lora-modules", f"{alias}={adapter}"])
+        if max_lora_rank:
+            command.extend(["--max-lora-rank", str(max_lora_rank)])
     return command
 
 
@@ -36,7 +39,10 @@ def main() -> None:
     inference = experiment["inference"]
     adapter = args.adapter or inference.get("adapter_path")
     adapter_name = args.adapter_name or inference.get("adapter_name")
-    command = build_command(experiment, model, adapter, adapter_name)
+    command = build_command(
+        experiment, model, adapter, adapter_name,
+        port=int(inference.get("port", 8000)), max_lora_rank=inference.get("max_lora_rank"),
+    )
     print(shlex.join(command))
     if args.run:
         subprocess.run(command, check=True)

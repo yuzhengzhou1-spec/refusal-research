@@ -40,6 +40,10 @@ def main() -> None:
             if path.exists():
                 for row in read_jsonl(path):
                     tokenized = tokenizer.apply_chat_template(row["messages"], tokenize=True)
+                    if hasattr(tokenized, "keys"):  # transformers 5.x返回BatchEncoding而非token列表
+                        tokenized = tokenized["input_ids"]
+                    if tokenized and isinstance(tokenized[0], list):  # 个别版本带批次维度
+                        tokenized = tokenized[0]
                     lengths.append(len(tokenized))
         report["token_lengths"] = {"count": len(lengths), "max": max(lengths, default=0), "configured_max": 4096, "truncated": sum(length > 4096 for length in lengths)}
     print(json.dumps(report, ensure_ascii=False, indent=2))

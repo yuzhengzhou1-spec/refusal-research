@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from common import load_experiment, load_yaml, make_initial_messages, normalized_trajectory, read_jsonl, resolve_root_path, write_jsonl
+from common import load_experiment, load_yaml, make_initial_messages, normalized_trajectory, read_jsonl, resolve_output_artifact, resolve_root_path, write_jsonl
 
 
 def main() -> None:
@@ -16,7 +16,7 @@ def main() -> None:
     training = load_yaml(args.train_config)
     processed = resolve_root_path(experiment["paths"]["processed_dir"])
     families = {row["family_id"]: row for row in read_jsonl(processed / "families_train.jsonl")}
-    predictions = read_jsonl(resolve_root_path(args.predictions or training["source_predictions"]))
+    predictions = read_jsonl(resolve_output_artifact(experiment, args.predictions or training["source_predictions"]))
     pairs, skipped = [], []
     for prediction in predictions:
         record = families.get(prediction["family_id"])

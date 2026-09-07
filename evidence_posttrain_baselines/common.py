@@ -39,6 +39,14 @@ def model_path(experiment: dict[str, Any], model: dict[str, Any]) -> Path:
     return (root / model["local_path"]).resolve()
 
 
+def resolve_output_artifact(experiment: dict[str, Any], value: str) -> Path:
+    """运行产物(预测jsonl、LoRA适配器)按output_dir解析;本地相对outputs与服务器绝对实验盘均成立。"""
+    path = Path(value).expanduser()
+    if path.is_absolute():
+        return path.resolve()
+    return (resolve_root_path(experiment["paths"]["output_dir"]) / path).resolve()
+
+
 def read_jsonl(path: str | Path) -> list[dict[str, Any]]:
     records = []
     with Path(path).open("r", encoding="utf-8") as stream:

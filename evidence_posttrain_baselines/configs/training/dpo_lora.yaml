@@ -1,6 +1,7 @@
 seed: 20260901
-source_predictions: outputs/qwen25_sft_train/predictions.jsonl
-sft_adapter: outputs/qwen2_5_7b_instruct/sft_lora_full_trajectory/final_adapter
+# 相对路径按experiment.yaml的output_dir解析(见common.resolve_output_artifact)
+source_predictions: qwen25_sft_b3_train/predictions.jsonl
+sft_adapter: qwen2_5_7b_instruct/sft_lora_full_trajectory/final_adapter
 output_subdir: dpo_lora
 num_train_epochs: 1
 learning_rate: 0.000005

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from common import load_experiment, load_yaml, resolve_root_path
+from common import load_experiment, load_yaml, resolve_output_artifact
 
 
 def main() -> None:
@@ -22,7 +22,7 @@ def main() -> None:
     training = load_yaml(args.train_config)
     processed = resolve_root_path(experiment["paths"]["processed_dir"])
     dataset = load_dataset("json", data_files={"train": str(processed / "dpo_train.jsonl")})["train"]
-    adapter_path = resolve_root_path(args.sft_adapter or training["sft_adapter"])
+    adapter_path = resolve_output_artifact(experiment, args.sft_adapter or training["sft_adapter"])
     model = AutoPeftModelForCausalLM.from_pretrained(adapter_path, is_trainable=True, dtype=torch.bfloat16)
     tokenizer = AutoTokenizer.from_pretrained(adapter_path)
     if tokenizer.pad_token_id is None:
