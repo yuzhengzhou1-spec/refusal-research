@@ -1,10 +1,14 @@
 seed: 20260901
 # 相对路径按experiment.yaml的output_dir解析(见common.resolve_output_artifact)
 source_predictions: qwen25_sft_b3_train/predictions.jsonl
+overrefusal_predictions: qwen25_dpo_b4_train/predictions.jsonl
 sft_adapter: qwen2_5_7b_instruct/sft_lora_full_trajectory/final_adapter
+# 每类偏好上限; 0=不限。当前语义=请求偏好:回答保护 1:1 配平
+max_per_category: 10
 output_subdir: dpo_lora
-# B3在train分割已达93.8%动作正确率, 偏好对仅10条; accum=16+1epoch只有1个优化器步,
-# DPO无法学习。改小累积步数并训3轮, 共15个优化器步, 使偏好优化真正有机会起作用。
+# 模型选择标准(冻结, 禁止以DPO loss选点):
+# 1) FULL能力不得明显低于B3(hard约束); 2) 在该约束下最大化端到端成功率; 3) 固定epoch取末步checkpoint。
+# B4教训: 单向偏好把under-refusal修到满分的同时full 94.7→57.9, 四项均分与B3精确相等。
 num_train_epochs: 3
 learning_rate: 0.000005
 per_device_train_batch_size: 1
