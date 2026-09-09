@@ -61,3 +61,8 @@ checkpoints/
 *.onnx
 *.log
 
+
+# 本机Day1交接原件和离线审阅工作区
+/day1_handoff_20260909/
+/server_day1/
+/day1_b5_local_review/

@@ -1,25 +1,30 @@
 from __future__ import annotations
 
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
-from common import resolve_output_artifact
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from common import resolve_output_artifact  # noqa: E402
 
 
 class OutputArtifactPathTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.experiment = {"paths": {"output_dir": str(self.root / "baselines")}}
+
     def test_relative_value_resolves_against_output_dir(self):
-        experiment = {"paths": {"output_dir": str(Path("/srv/experiments/baselines"))}}
         self.assertEqual(
-            resolve_output_artifact(experiment, "qwen25_sft_train/predictions.jsonl"),
-            Path("/srv/experiments/baselines/qwen25_sft_train/predictions.jsonl"),
+            resolve_output_artifact(self.experiment, "qwen25_sft_train/predictions.jsonl"),
+            self.root / "baselines" / "qwen25_sft_train" / "predictions.jsonl",
         )
 
     def test_absolute_value_is_kept(self):
-        experiment = {"paths": {"output_dir": str(Path("/srv/experiments/baselines"))}}
-        self.assertEqual(
-            resolve_output_artifact(experiment, "/elsewhere/adapter"),
-            Path("/elsewhere/adapter"),
-        )
+        absolute = self.root / "elsewhere" / "adapter"
+        self.assertEqual(resolve_output_artifact(self.experiment, str(absolute)), absolute)
 
 
 if __name__ == "__main__":
