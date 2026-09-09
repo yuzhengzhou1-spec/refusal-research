@@ -11,6 +11,7 @@ def main() -> None:
     parser.add_argument("--train-config", default="configs/training/dpo_lora.yaml")
     parser.add_argument("--sft-adapter", help="覆盖训练配置中的sft_adapter")
     parser.add_argument("--output-suffix", help="输出目录后缀(区分多版本偏好集, 如 _b5_bidirectional)")
+    parser.add_argument("--seed", type=int, help="覆盖训练配置中的seed(多种子复验)")
     args = parser.parse_args()
 
     import torch
@@ -21,6 +22,8 @@ def main() -> None:
 
     experiment, model_config, _ = load_experiment(args.config)
     training = load_yaml(args.train_config)
+    if args.seed is not None:
+        training["seed"] = args.seed
     processed = resolve_root_path(experiment["paths"]["processed_dir"])
     dataset = load_dataset("json", data_files={"train": str(processed / "dpo_train.jsonl")})["train"]
     adapter_path = resolve_output_artifact(experiment, args.sft_adapter or training["sft_adapter"])
